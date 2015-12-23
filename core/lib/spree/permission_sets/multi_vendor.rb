@@ -12,9 +12,10 @@ module Spree
       def activate!
         if user.stock_locations.any?
 
-          can :admin, Spree::StockItem, source_location_id: user_location_ids + [nil], shipped_at: nil
-          can :display, Spree::StockItem, source_location_id: user_location_ids
-          can :manage, Spree::StockItem, source_location_id: user_location_ids
+          #can :admin,   :all,  true # source_location_id: user_location_ids + [nil], shipped_at: nil
+          #can :create,  :all,  true # source_location_id: user_location_ids
+          #can :display, :all, true #  source_location_id: user_location_ids
+          can :manage,  :all #,  true # source_location_id: user_location_ids
         end
       end
 
