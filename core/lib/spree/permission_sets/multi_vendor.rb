@@ -7,15 +7,14 @@ module Spree
     # Users can be associated with stock locations via the admin user interface.
     #
     # @see Spree::PermissionSets::Base
+    #
+    # https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities
 
     class MultiVendor < PermissionSets::Base
       def activate!
-        if user.stock_locations.any?
+        if user_location_ids.include()
 
-          #can :admin,   :all,  true # source_location_id: user_location_ids + [nil], shipped_at: nil
-          #can :create,  :all,  true # source_location_id: user_location_ids
-          #can :display, :all, true #  source_location_id: user_location_ids
-          can :manage,  :all #,  true # source_location_id: user_location_ids
+          can :manage,  Spree::StockItem
         end
       end
 
