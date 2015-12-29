@@ -12,9 +12,9 @@ module Spree
 
     class MultiVendor < PermissionSets::Base
       def activate!
-        if user_location_ids.include()
-
-          can :manage,  Spree::StockItem
+        cannot :view, Spree::StockItem
+        if user_location_ids.include(Spree::StockItem.variant.stock_location_ids)
+          can :view, Spree::StockItem
         end
       end
 
