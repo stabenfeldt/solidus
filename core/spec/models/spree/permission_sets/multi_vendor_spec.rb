@@ -3,6 +3,7 @@ require 'spec_helper'
 describe Spree::PermissionSets::MultiVendor do
   let(:ability) { Spree::Ability.new(user) }
   let(:user)    { create(:user) }
+  let(:product) { create :product }
 	let(:stock_location) { create(:stock_location_with_items) }
 	let(:stock_item) { stock_location.stock_items.order(:id).first }
 
