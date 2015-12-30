@@ -12,10 +12,9 @@ module Spree
 
     class MultiVendor < PermissionSets::Base
       def activate!
+        puts "\n\n\n MULTI VENDOR \n\n\n"
         cannot :view, Spree::StockItem
-        if user_location_ids.include(Spree::StockItem.variant.stock_location_ids)
-          can :view, Spree::StockItem
-        end
+        can :view, Spree::StockItem, :stock_location_id => user.stock_locations.first.id
       end
 
       private
@@ -24,9 +23,6 @@ module Spree
         @user_location_ids ||= user.stock_locations.pluck(:id)
       end
 
-      def not_permitted_location_ids
-        @not_permitted_location_ids ||= Spree::StockLocation.where.not(id: user_location_ids).pluck(:id)
-      end
     end
   end
 end
