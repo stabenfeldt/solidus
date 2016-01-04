@@ -8,6 +8,19 @@ module Spree
   #   +#destroy+ will only soft-destroy records and the default scope hides
   #   soft-destroyed records using +WHERE deleted_at IS NULL+.
   class Product < Spree::Base
+
+
+    # scope :stock_location_id, includes(:variant) .where(:master => true)
+    # Spree::Product.includes('stock_items').where( spree_stock_items: {stock_location_id: 3 } )
+
+
+    # scope :created_before, ->(time) { where("created_at < ?", time)  }
+    scope :stock_location_id_for_user, ->(user) { includes(:stock_items)
+        .where( spree_stock_items: { stock_location_id: user.stock_locations.first.id } )
+      }
+
+
+
     extend FriendlyId
     friendly_id :slug_candidates, use: :history
 
