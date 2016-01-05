@@ -16,7 +16,7 @@ module Spree
 
     # scope :created_before, ->(time) { where("created_at < ?", time)  }
     scope :items_belonging_to_user, ->(user) { includes(:stock_items)
-        .where( spree_stock_items: { stock_location_id: user.stock_locations.first.id } )
+      .where( spree_stock_items: { stock_location_id: user.stock_locations.present? && user.stock_locations.first.id  } )
       }
 
 

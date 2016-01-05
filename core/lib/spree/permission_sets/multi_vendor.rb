@@ -16,7 +16,7 @@ module Spree
 
       def activate!
         cannot :all, Spree::StockItem
-        can    :view, Spree::StockItem, :stock_location_id => user.stock_locations.first.id
+        can    :view, Spree::StockItem, :stock_location_id => user.stock_locations.present? && user.stock_locations.first.id
 
         cannot :all, %W[
             Spree::Product

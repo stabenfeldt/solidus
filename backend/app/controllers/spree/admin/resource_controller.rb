@@ -189,12 +189,12 @@ class Spree::Admin::ResourceController < Spree::Admin::BaseController
 
     def collection
       return parent.send(controller_name) if parent_data.present?
-      byebug
       if model_class.respond_to?(:accessible_by) && !current_ability.has_block?(params[:action], model_class)
         #model_class.accessible_by(current_ability, action)
-        model_class.all
         if model_class == Spree::Product
-          Spree::Product.items_belonging_to_user(current_user)
+          Spree::Product.items_belonging_to_user(try_spree_current_user)
+        else
+          model_class.all
         end
       else
         model_class.where(nil)
