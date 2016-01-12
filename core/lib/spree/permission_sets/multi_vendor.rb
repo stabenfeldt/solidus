@@ -15,7 +15,7 @@ module Spree
     class MultiVendor < PermissionSets::Base
 
       def activate!
-        cannot :manage, :all
+        #cannot :manage, :all
 
         cannot :all, Spree::StockItem
         can    :view, Spree::StockItem, :stock_location_id => user.stock_locations.present? && user.stock_locations.first.id
@@ -32,6 +32,8 @@ module Spree
           product.master.stock_locations.blank? ||
           product.master.stock_locations.first.id == user.stock_locations.first.id
         end
+
+        can :all, Spree.user_class
 
         can [:manage], Spree::Image
 
