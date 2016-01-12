@@ -15,16 +15,24 @@ module Spree
     class MultiVendor < PermissionSets::Base
 
       def activate!
+        cannot :manage, :all
+
         cannot :all, Spree::StockItem
-        can    :view, Spree::StockItem, :stock_location_id => user.stock_locations.present? && user.stock_locations.first.id
+        can    :view, Spree::StockItem,
+          :stock_location_id => user.stock_locations.present? && user.stock_locations.first.id
 
         cannot :all, %W[
             Spree::Product
         ]
 
+
+        cannot :all, Spree::Product
+        can :index, Spree::Product
+        can [:display, :admin, :edit, :list, :update], Spree::Product do |product|
+          product.master.stock_locations.first.id == user.stock_locations.first.id
+        end
+
         # p.master.stock_locations.first.id
-
-
             #Spree::Image
             #Spree::Variant
             #Spree::OptionValue
@@ -34,13 +42,6 @@ module Spree
             #Spree::Prototype
             #Spree::Taxonomy
             #Spree::Taxon
-
-        cannot :all, Spree::Product
-        can :index, Spree::Product
-        can [:display, :admin, :edit, :list], Spree::Product do |product|
-          #byebug
-          product.master.stock_locations.first.id == user.stock_locations.first.id
-        end
 
         #can [:display, :admin], Spree::Image
         #can [:display, :admin], Spree::Variant
