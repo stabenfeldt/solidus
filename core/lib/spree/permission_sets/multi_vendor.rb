@@ -27,7 +27,8 @@ module Spree
         #cannot :all, Spree::Product
         can :index, Spree::Product
         can :create, Spree::Product
-        can [:manage], Spree::Product do |product|
+        #can [:manage], Spree::Product do |product|
+        can [:display, :admin, :edit, :list, :update], Spree::Product do |product|
           product.master.stock_locations.blank? ||
           product.master.stock_locations.first.id == user.stock_locations.first.id
         end
