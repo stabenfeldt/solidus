@@ -284,7 +284,6 @@ module Spree
     # @return [Spree::Image] the image to display
     def display_image
       begin
-        byebug
         images.first || variant_images.first || Spree::Image.new
       rescue nil
       end
