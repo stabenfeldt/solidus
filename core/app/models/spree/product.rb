@@ -285,7 +285,7 @@ module Spree
     def display_image
       begin
         images.first || variant_images.first || Spree::Image.new
-      rescue nil
+      rescue ''
       end
     end
 
