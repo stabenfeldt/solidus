@@ -283,7 +283,11 @@ module Spree
     # variants. If all else fails, will return a new image object.
     # @return [Spree::Image] the image to display
     def display_image
-      images.first || variant_images.first || Spree::Image.new
+      begin
+        byebug
+        images.first || variant_images.first || Spree::Image.new
+      rescue nil
+      end
     end
 
     # Finds the variant property rule that matches the provided option value ids.
