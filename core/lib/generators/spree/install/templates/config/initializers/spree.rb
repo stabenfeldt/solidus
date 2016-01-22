@@ -47,8 +47,32 @@ Spree.config do |config|
   #   secret_key: ENV['STRIPE_SECRET_KEY'],
   #   publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
   #   server: Rails.env.production? ? 'production' : 'test',
-  #   test: !Rails.env.production?
+  #   test_mode: !Rails.env.production?
   # )
 end
+
+<% if defined?(Spree::Frontend::Engine) -%>
+Spree::Frontend::Config.configure do |config|
+  config.use_static_preferences!
+
+  config.locale = 'en'
+end
+<% end -%>
+
+<% if defined?(Spree::Backend::Engine) -%>
+Spree::Backend::Config.configure do |config|
+  config.use_static_preferences!
+
+  config.locale = 'en'
+end
+<% end -%>
+
+<% if defined?(Spree::Api::Engine) -%>
+Spree::Api::Config.configure do |config|
+  config.use_static_preferences!
+
+  config.requires_authentication = true
+end
+<% end -%>
 
 Spree.user_class = <%= (options[:user_class].blank? ? "Spree::LegacyUser" : options[:user_class]).inspect %>

@@ -117,10 +117,17 @@ describe Spree::CreditCard, type: :model do
     end
 
     let!(:persisted_card) { Spree::CreditCard.find(credit_card.id) }
-    let (:valid_address_attributes) { {firstname: "Hugo", lastname: "Furst",
-                                       address1: "123 Main", city: "Somewhere",
-                                       country_id: 1, zipcode: 55555,
-                                       phone: "1234567890"} }
+    let(:valid_address_attributes) do
+      {
+        firstname: "Hugo",
+        lastname: "Furst",
+        address1: "123 Main",
+        city: "Somewhere",
+        country_id: 1,
+        zipcode: 55_555,
+        phone: "1234567890"
+      }
+    end
 
     it "should not actually store the number" do
       expect(persisted_card.number).to be_blank
@@ -154,7 +161,7 @@ describe Spree::CreditCard, type: :model do
     end
   end
 
-  # Regression test for #3847 & #3896
+  # Regression test for https://github.com/spree/spree/issues/3847 and https://github.com/spree/spree/issues/3896
   context "#expiry=" do
     it "can set with a 2-digit month and year" do
       credit_card.expiry = '04 / 15'
@@ -196,7 +203,7 @@ describe Spree::CreditCard, type: :model do
       credit_card.expiry = ''
     end
 
-    # Regression test for #4725
+    # Regression test for https://github.com/spree/spree/issues/4725
     it "does not blow up when passed one number" do
       credit_card.expiry = '12'
     end

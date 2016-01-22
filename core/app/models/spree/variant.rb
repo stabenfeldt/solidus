@@ -18,7 +18,7 @@ module Spree
 
     include Spree::DefaultPrice
 
-    belongs_to :product, touch: true, class_name: 'Spree::Product', inverse_of: :variants
+    belongs_to :product, -> { with_deleted }, touch: true, class_name: 'Spree::Product', inverse_of: :variants
     belongs_to :tax_category, class_name: 'Spree::TaxCategory'
 
     delegate :name, :description, :slug, :available_on, :shipping_category_id,
@@ -49,7 +49,7 @@ module Spree
 
     validates :cost_price, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
     validates :price,      numericality: { greater_than_or_equal_to: 0, allow_nil: true }
-    validates_uniqueness_of :sku, allow_blank: true, conditions: -> { where(deleted_at: nil) }
+    validates_uniqueness_of :sku, allow_blank: true, unless: :deleted_at
 
     after_create :create_stock_items
     after_create :set_position
@@ -156,14 +156,6 @@ module Spree
     # @return [Boolean] true if this variant has been deleted
     def deleted?
       !!deleted_at
-    end
-
-    # Override ActiveRecord finder to function even if the product has been
-    # deleted.
-    #
-    # @return [Spree::Product]
-    def product
-      Spree::Product.unscoped { super }
     end
 
     # Assign given options hash to option values.
@@ -346,9 +338,12 @@ module Spree
       # Ensures a new variant takes the product master price when price is not supplied
       def check_price
         if price.nil? && Spree::Config[:require_master_price]
-          raise 'No master variant found to infer price' unless (product && product.master)
-          raise 'Must supply price for variant or master.price for product.' if self == product.master
-          self.price = product.master.price
+          if is_master?
+            errors.add :price, 'Must supply price for variant or master.price for product.'
+          else
+            raise 'No master variant found to infer price' unless (product && product.master)
+            self.price = product.master.price
+          end
         end
         if currency.nil?
           self.currency = Spree::Config[:currency]

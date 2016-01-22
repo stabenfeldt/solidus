@@ -38,16 +38,58 @@ describe Spree::Product, :type => :model do
       end
     end
 
-    context "master variant" do
+    describe "#save" do
+      before { product.update_columns(updated_at: 1.day.ago) }
+      subject { product.save! }
+
+      shared_examples "a change occurred" do
+        it "should change updated_at" do
+          expect { subject }.to change{ product.updated_at }
+        end
+
+        it "should touch taxons" do
+          taxon = create(:taxon, products: [product])
+          taxon.update_columns(updated_at: 1.day.ago)
+          product.taxons.reload
+          expect { subject }.to change{ taxon.reload.updated_at }
+        end
+      end
+
+      shared_examples "no change occurred" do
+        it "should not change updated_at" do
+          expect { subject }.not_to change{ product.updated_at }
+        end
+
+        it "should not touch taxons" do
+          taxon = create(:taxon, products: [product])
+          taxon.update_columns(updated_at: 1.day.ago)
+          product.taxons.reload
+          expect { subject }.not_to change{ taxon.reload.updated_at }
+        end
+      end
+
+      context "when nothing has changed" do
+        it_behaves_like "no change occurred"
+      end
+
+      context "when the product itself was changed" do
+        before do
+          product.name = "Perri-air"
+        end
+
+        it_behaves_like "a change occurred"
+      end
 
       context "when master variant changed" do
         before do
           product.master.sku = "Something changed"
         end
 
+        it_behaves_like "a change occurred"
+
         it "saves the master" do
-          expect(product.master).to receive(:save!)
-          product.save
+          product.save!
+          expect(product.reload.master.sku).to eq "Something changed"
         end
       end
 
@@ -59,21 +101,11 @@ describe Spree::Product, :type => :model do
           product.master.default_price.price = 12
         end
 
-        it "saves the master" do
-          expect(product.master).to receive(:save!)
-          product.save
-        end
+        it_behaves_like "a change occurred"
 
-        it "saves the default price" do
-          expect(product.master.default_price).to receive(:save)
-          product.save
-        end
-      end
-
-      context "when master variant and price haven't changed" do
-        it "does not save the master" do
-          expect(product.master).not_to receive(:save!)
-          product.save
+        it "saves the default_price" do
+          product.save!
+          expect(product.reload.master.default_price.price).to eq 12
         end
       end
     end
@@ -103,7 +135,7 @@ describe Spree::Product, :type => :model do
     end
 
     context "#price" do
-      # Regression test for #1173
+      # Regression test for https://github.com/spree/spree/issues/1173
       it 'strips non-price characters' do
         product.price = "$10"
         expect(product.price).to eq(10.0)
@@ -236,7 +268,7 @@ describe Spree::Product, :type => :model do
       end
     end
 
-    # Regression test for #3737
+    # Regression test for https://github.com/spree/spree/issues/3737
     context "has stock items" do
       let(:product) { create(:product) }
       it "can retrieve stock items" do
@@ -300,6 +332,13 @@ describe Spree::Product, :type => :model do
         end
       end
     end
+
+    context "#really_destroy!" do
+      it "destroy the product" do
+        product.really_destroy!
+        expect(product).not_to be_persisted
+      end
+    end
   end
 
   context "properties" do
@@ -328,7 +367,7 @@ describe Spree::Product, :type => :model do
       }.to change { product.properties.length }.by(1)
     end
 
-    # Regression test for #2455
+    # Regression test for https://github.com/spree/spree/issues/2455
     it "should not overwrite properties' presentation names" do
       Spree::Property.where(:name => 'foo').first_or_create!(:presentation => "Foo's Presentation Name")
       product.set_property('foo', 'value1')
@@ -337,7 +376,7 @@ describe Spree::Product, :type => :model do
       expect(Spree::Property.where(:name => 'bar').first.presentation).to eq("bar")
     end
 
-    # Regression test for #4416
+    # Regression test for https://github.com/spree/spree/issues/4416
     context "#possible_promotions" do
       let!(:promotion) do
         create(:promotion, advertise: true, starts_at: 1.day.ago)
@@ -450,7 +489,7 @@ describe Spree::Product, :type => :model do
     end
   end
 
-  # Regression tests for #2352
+  # Regression tests for https://github.com/spree/spree/issues/2352
   context "classifications and taxons" do
     it "is joined through classifications" do
       reflection = Spree::Product.reflect_on_association(:taxons)
@@ -497,8 +536,30 @@ describe Spree::Product, :type => :model do
     it { is_expected.to be_invalid }
   end
 
-  it "initializes a master variant when building a product" do
-    product = Spree::Product.new
-    expect(product.master.is_master).to be true
+  describe '.new' do
+    let(:product) { Spree::Product.new(attributes) }
+
+    shared_examples "new product with master" do
+      it "initializes master correctly" do
+        expect(product.master.is_master).to be true
+        expect(product.master.product).to be product
+      end
+    end
+
+    context 'no attributes' do
+      let(:attributes) { {} }
+      it_behaves_like "new product with master"
+    end
+
+    context 'initializing with variant attributes' do
+      let(:attributes) { {sku: 'FOO'} }
+
+      it_behaves_like "new product with master"
+
+      it "initializes the variant with the correct attributes" do
+        expect(product.master.sku).to eq 'FOO'
+        expect(product.sku).to eq 'FOO'
+      end
+    end
   end
 end

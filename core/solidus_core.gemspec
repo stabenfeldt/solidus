@@ -1,10 +1,10 @@
 # encoding: UTF-8
-version = File.read(File.expand_path("../../SOLIDUS_VERSION", __FILE__)).strip
+require_relative '../core/lib/spree/core/version.rb'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'solidus_core'
-  s.version     = version
+  s.version     = Spree.solidus_version
   s.summary     = 'Essential models, mailers, and classes for the Solidus e-commerce project.'
   s.description = s.summary
 
@@ -32,9 +32,9 @@ Gem::Specification.new do |s|
   s.add_dependency 'kaminari', '~> 0.15', '>= 0.15.1'
   s.add_dependency 'monetize', '~> 1.1'
   s.add_dependency 'paperclip', '~> 4.2.0'
-  s.add_dependency 'paranoia', '~> 2.1.0'
+  s.add_dependency 'paranoia', '~> 2.1.4'
   s.add_dependency 'premailer-rails'
-  s.add_dependency 'rails', '~> 4.2.0'
+  s.add_dependency 'rails', '~> 4.2.5'
   s.add_dependency 'ransack', '~> 1.6.0'
   s.add_dependency 'responders'
   s.add_dependency 'state_machines-activerecord', '~> 0.2'
@@ -43,4 +43,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'twitter_cldr', '~> 3.0'
 
   s.add_development_dependency 'email_spec', '~> 1.6'
+  s.add_dependency 'sprockets-rails', '~> 2.0'
 end

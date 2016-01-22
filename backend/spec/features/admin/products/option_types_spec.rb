@@ -56,7 +56,7 @@ describe "Option Types", :type => :feature do
     end
   end
 
-  # Regression test for #2277
+  # Regression test for https://github.com/spree/spree/issues/2277
   it "can remove an option value from an option type", :js => true do
     create(:option_value)
     click_link "Option Types"
@@ -69,16 +69,21 @@ describe "Option Types", :type => :feature do
     # Assert that the field is hidden automatically
     expect(page).to have_no_css("tbody#option_values tr")
 
+    # Ensure the DELETE request finishes
+    expect(page).to have_no_css("#progress")
+
     # Then assert that on a page refresh that it's still not visible
     visit page.current_url
     # What *is* visible is a new option value field, with blank values
     # Sometimes the page doesn't load before the all check is done
     # lazily finding the element gives the page 10 seconds
     expect(page).to have_css("tbody#option_values")
-    all("tbody#option_values tr input", count: 2).all? { |input| input.value.blank? }
+    all("tbody#option_values tr input", count: 2).each do |input|
+      expect(input.value).to be_blank
+    end
   end
-  
-  # Regression test for #3204
+
+  # Regression test for https://github.com/spree/spree/issues/3204
   it "can remove a non-persisted option value from an option type", :js => true do
     create(:option_type)
     click_link "Option Types"

@@ -1,3 +1,10 @@
+require 'spree/testing_support/factories/address_factory'
+require 'spree/testing_support/factories/shipment_factory'
+require 'spree/testing_support/factories/store_factory'
+require 'spree/testing_support/factories/user_factory'
+require 'spree/testing_support/factories/line_item_factory'
+require 'spree/testing_support/factories/payment_factory'
+
 FactoryGirl.define do
   factory :order, class: Spree::Order do
     user
@@ -27,16 +34,19 @@ FactoryGirl.define do
         line_items_attributes { [{}] * line_items_count }
         shipment_cost 100
         shipping_method nil
+        stock_location { create(:stock_location) }
       end
 
       after(:create) do |order, evaluator|
+        evaluator.stock_location # must evaluate before creating line items
+
         evaluator.line_items_attributes.each do |attributes|
           attributes = {order: order, price: evaluator.line_items_price}.merge(attributes)
           create(:line_item, attributes)
         end
         order.line_items.reload
 
-        create(:shipment, order: order, cost: evaluator.shipment_cost, shipping_method: evaluator.shipping_method, address: evaluator.ship_address)
+        create(:shipment, order: order, cost: evaluator.shipment_cost, shipping_method: evaluator.shipping_method, address: evaluator.ship_address, stock_location: evaluator.stock_location)
         order.shipments.reload
 
         order.update!

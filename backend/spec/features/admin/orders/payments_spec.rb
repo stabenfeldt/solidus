@@ -30,7 +30,7 @@ describe 'Payments', :type => :feature do
       visit current_path
     end
 
-    # Regression tests for #1453
+    # Regression tests for https://github.com/spree/spree/issues/1453
     context 'with a check payment' do
       let(:order) { create(:completed_order_with_totals, number: 'R100') }
       let!(:payment) do
@@ -80,7 +80,7 @@ describe 'Payments', :type => :feature do
       end
 
       click_icon :void
-      expect(find('#payment_status').text).to eq('BALANCE DUE')
+      expect(page).to have_css('#payment_status', text: 'BALANCE DUE')
       expect(page).to have_content('Payment Updated')
 
       within_row(1) do
@@ -95,12 +95,12 @@ describe 'Payments', :type => :feature do
       expect(page).to have_content('successfully created!')
 
       click_icon(:capture)
-      expect(find('#payment_status').text).to eq('PAID')
 
+      expect(page).to have_selector('#payment_status', text: 'PAID')
       expect(page).not_to have_selector('#new_payment_section')
     end
 
-    # Regression test for #1269
+    # Regression test for https://github.com/spree/spree/issues/1269
     it 'cannot create a payment for an order with no payment methods' do
       Spree::PaymentMethod.delete_all
       order.payments.delete_all
@@ -150,10 +150,10 @@ describe 'Payments', :type => :feature do
         within_row(1) do
           click_icon(:edit)
           fill_in('amount', with: 'invalid')
-          expect(find('td.amount input').value).to eq('invalid')
-          expect(payment.reload.amount).to eq(150.00)
         end
         expect(page).to have_selector('.flash.error', text: 'Invalid resource. Please fix errors and try again.')
+        expect(page).to have_field('amount', with: 'invalid')
+        expect(payment.reload.amount).to eq(150.00)
       end
     end
 
@@ -173,7 +173,7 @@ describe 'Payments', :type => :feature do
     let(:order) { create(:order_with_line_items, :line_items_count => 1) }
     let!(:payment_method) { create(:credit_card_payment_method)}
 
-    # Regression tests for #4129
+    # Regression tests for https://github.com/spree/spree/issues/4129
     context "with a credit card payment method" do
       before do
         visit spree.admin_order_payments_path(order)
@@ -184,7 +184,7 @@ describe 'Payments', :type => :feature do
         fill_in "Name *", :with => "Test User"
         fill_in "Expiration", :with => "09 / #{Time.current.year + 1}"
         fill_in "Card Code", :with => "007"
-        # Regression test for #4277
+        # Regression test for https://github.com/spree/spree/issues/4277
         expect(page).to have_css('.ccType[value="visa"]', visible: false)
         click_button "Continue"
         expect(page).to have_content("Payment has been successfully created!")

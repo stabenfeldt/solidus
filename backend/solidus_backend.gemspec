@@ -1,10 +1,10 @@
 # encoding: UTF-8
-version = File.read(File.expand_path("../../SOLIDUS_VERSION", __FILE__)).strip
+require_relative '../core/lib/spree/core/version.rb'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'solidus_backend'
-  s.version     = version
+  s.version     = Spree.solidus_version
   s.summary     = 'Admin interface for the Solidus e-commerce framework.'
   s.description = s.summary
 
@@ -18,14 +18,13 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.requirements << 'none'
 
-  s.add_dependency 'solidus_api', version
-  s.add_dependency 'solidus_core', version
+  s.add_dependency 'solidus_api', s.version
+  s.add_dependency 'solidus_core', s.version
 
-  s.add_dependency 'bourbon'
+  s.add_dependency 'bourbon', '>= 4', '< 6'
   s.add_dependency 'jquery-rails'
   s.add_dependency 'jquery-ui-rails', '~> 5.0.0'
   s.add_dependency 'select2-rails',   '3.5.9.1' # 3.5.9.2 breaks forms
 
   s.add_dependency 'handlebars_assets'
-  s.add_dependency 'sprockets-rails', '~> 2.0' # 3.0 breaks handlebars_assets
 end

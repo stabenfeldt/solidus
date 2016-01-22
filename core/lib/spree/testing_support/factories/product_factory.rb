@@ -1,7 +1,13 @@
+require 'spree/testing_support/sequences'
+require 'spree/testing_support/factories/shipping_category_factory'
+require 'spree/testing_support/factories/stock_location_factory'
+require 'spree/testing_support/factories/tax_category_factory'
+require 'spree/testing_support/factories/product_option_type_factory'
+
 FactoryGirl.define do
   factory :base_product, class: Spree::Product do
     sequence(:name) { |n| "Product ##{n} - #{Kernel.rand(9999)}" }
-    description { generate(:random_description) }
+    description "As seen on TV!"
     price 19.99
     cost_price 17.00
     sku { generate(:sku) }

@@ -3,14 +3,17 @@ module Spree
     acts_as_paranoid
 
     belongs_to :stock_location, class_name: 'Spree::StockLocation', inverse_of: :stock_items
-    belongs_to :variant, class_name: 'Spree::Variant', inverse_of: :stock_items
+    belongs_to :variant, -> { with_deleted }, class_name: 'Spree::Variant', inverse_of: :stock_items
     has_many :stock_movements, inverse_of: :stock_item
 
-    validates_presence_of :stock_location, :variant
-    validates_uniqueness_of :variant_id, scope: [:stock_location_id, :deleted_at]
+    validates :stock_location, :variant, presence: true
+    validates :variant_id, uniqueness: { scope: [:stock_location_id, :deleted_at] }, allow_blank: true, unless: :deleted_at
     validates :count_on_hand, numericality: { greater_than_or_equal_to: 0 }, if: :verify_count_on_hand?
 
     delegate :weight, :should_track_inventory?, to: :variant
+
+    # @return [String] the name of this stock item's variant
+    delegate :name, to: :variant, prefix: true
 
     after_save :conditional_variant_touch, if: :changed?
     after_touch { variant.touch }
@@ -21,11 +24,6 @@ module Spree
     #   associated with this stock item
     def backordered_inventory_units
       Spree::InventoryUnit.backordered_for_stock_item(self)
-    end
-
-    # @return [String] the name of this stock item's variant
-    def variant_name
-      variant.name
     end
 
     # Adjusts the count on hand by a given value.
@@ -63,18 +61,24 @@ module Spree
       self.in_stock? || self.backorderable?
     end
 
-    # @note This returns the variant regardless of whether it was soft
-    #   deleted.
-    # @return [Spree::Variant] this stock item's variant.
-    def variant
-      Spree::Variant.unscoped { super }
-    end
-
     # Sets the count on hand to zero if it not already zero.
     #
     # @note This processes backorders if the count on hand is not zero.
     def reduce_count_on_hand_to_zero
       self.set_count_on_hand(0) if count_on_hand > 0
+    end
+
+    def fill_status(quantity)
+      if count_on_hand >= quantity
+        on_hand = quantity
+        backordered = 0
+      else
+        on_hand = count_on_hand
+        on_hand = 0 if on_hand < 0
+        backordered = backorderable? ? (quantity - on_hand) : 0
+      end
+
+      [on_hand, backordered]
     end
 
     private

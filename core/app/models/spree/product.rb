@@ -32,9 +32,10 @@ module Spree
     belongs_to :shipping_category, class_name: 'Spree::ShippingCategory', inverse_of: :products
 
     has_one :master,
-      -> { where is_master: true },
+      -> { where(is_master: true).with_deleted },
       inverse_of: :product,
-      class_name: 'Spree::Variant'
+      class_name: 'Spree::Variant',
+      autosave: true
 
     has_many :variants,
       -> { where(is_master: false).order(:position) },
@@ -70,7 +71,6 @@ module Spree
 
     has_many :variant_images, -> { order(:position) }, source: :images, through: :variants_including_master
 
-    after_create :set_master_variant_defaults
     after_create :add_associations_from_prototype
     after_create :build_variants_from_option_values_hash, if: :option_values_hash
 
@@ -78,9 +78,7 @@ module Spree
 
     after_initialize :ensure_master
 
-    after_save :save_master
-    after_save :run_touch_callbacks, if: :anything_changed?
-    after_save :reset_nested_changes
+    after_save :run_touch_callbacks, if: :changed?
     after_touch :touch_taxons
 
     before_validation :normalize_slug, on: :update
@@ -231,7 +229,7 @@ module Spree
     # @param property_value [String] the property value
     def set_property(property_name, property_value)
       ActiveRecord::Base.transaction do
-        # Works around spree_i18n #301
+        # Works around spree_i18n https://github.com/spree/spree/issues/301
         property = Property.create_with(presentation: property_name).find_or_create_by(name: property_name)
         product_property = ProductProperty.where(product: self, property: property).first_or_initialize
         product_property.value = property_value
@@ -255,13 +253,6 @@ module Spree
       else
         stock_items.sum(:count_on_hand)
       end
-    end
-
-    # Override so if the master variant is deleted, we can still find it.
-    #
-    # @return [Spree::Variant] the master variant
-    def master
-      super || variants_including_master.with_deleted.find_by(is_master: true)
     end
 
     # Image that can be used for the product.
@@ -320,7 +311,7 @@ module Spree
 
     def ensure_master
       return unless new_record?
-      self.master ||= build_master
+      find_or_build_master
     end
 
     def normalize_slug
@@ -328,42 +319,17 @@ module Spree
     end
 
     def punch_slug
-      update_column :slug, "#{Time.current.to_i}_#{slug}" # punch slug with date prefix to allow reuse of original
+      # punch slug with date prefix to allow reuse of original
+      update_column :slug, "#{Time.current.to_i}_#{slug}" unless frozen?
     end
 
-    def anything_changed?
-      changed? || @nested_changes
-    end
-
-    def reset_nested_changes
-      @nested_changes = false
-    end
-
-    # there's a weird quirk with the delegate stuff that does not automatically save the delegate object
-    # when saving so we force a save using a hook
-    # Fix for issue #5306
-    def save_master
-      if master && (master.changed? || master.new_record? || (master.default_price && (master.default_price.changed? || master.default_price.new_record?)))
-        master.save!
-        @nested_changes = true
-      end
-    end
-
-    # If the master cannot be saved, the Product object will get its errors
-    # and will be destroyed
+    # If the master is invalid, the Product object will be assigned its errors
     def validate_master
-      # We call master.default_price here to ensure price is initialized.
-      # Required to avoid Variant#check_price validation failing on create.
-      unless master.default_price && master.valid?
+      unless master.valid?
         master.errors.each do |att, error|
           self.errors.add(att, error)
         end
       end
-    end
-
-    # ensures the master variant is flagged as such
-    def set_master_variant_defaults
-      master.is_master = true
     end
 
     # Try building a slug based on the following fields in increasing order of specificity.

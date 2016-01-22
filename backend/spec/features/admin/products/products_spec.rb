@@ -60,7 +60,7 @@ describe "Products", :type => :feature do
             create(:product, :name => "Just a product", :price => 19.99)
           end
 
-          # Regression test for #2737
+          # Regression test for https://github.com/spree/spree/issues/2737
           context "uses руб as the currency symbol" do
             it "on the products listing page" do
               visit spree.admin_products_path
@@ -241,13 +241,16 @@ describe "Products", :type => :feature do
         end
 
         it "should show localized price value on validation errors", :js => true do
+          fill_in "Name", :with => " "
+          select @shipping_category.name, from: "product_shipping_category_id"
           fill_in "product_price", :with => "19,99"
           click_button "Create"
-          expect(find('input#product_price').value).to eq('19,99')
+          expect(page).to have_content("Name can't be blank")
+          expect(page).to have_field('product_price', with: '19,99')
         end
       end
 
-      # Regression test for #2097
+      # Regression test for https://github.com/spree/spree/issues/2097
       it "can set the count on hand to a null value", :js => true do
         fill_in "product_name", :with => "Baseball Cap"
         fill_in "product_price", :with => "100"

@@ -175,7 +175,7 @@ describe Spree::Address, :type => :model do
         end
       end
 
-      # Regression test for #1142
+      # Regression test for https://github.com/spree/spree/issues/1142
       it "uses the first available country if :default_country_id is set to an invalid value" do
         Spree::Config[:default_country_id] = "0"
         expect(Spree::Address.build_default.country).to eq default_country
@@ -187,7 +187,7 @@ describe Spree::Address, :type => :model do
   context '.factory' do
     context 'with attributes that use setters defined in Address' do
       let(:address_attributes) { attributes_for(:address, country_id: nil, country_iso: country.iso) }
-      let(:country) { create(:country, iso: 'ZZ') }
+      let(:country) { create(:country, iso: 'ZW') }
 
       it 'uses the setters' do
         expect(subject.factory(address_attributes).country_id).to eq(country.id)
@@ -312,7 +312,7 @@ describe Spree::Address, :type => :model do
 
   context '#country_iso=' do
     let(:address) { build(:address, :country_id => nil) }
-    let(:country) { create(:country, iso: 'ZZ') }
+    let(:country) { create(:country, iso: 'ZW') }
 
     it 'sets the country to the country with the matching iso code' do
       address.country_iso = country.iso

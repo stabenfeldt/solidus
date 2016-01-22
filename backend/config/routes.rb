@@ -141,9 +141,6 @@ Spree::Core::Engine.add_routes do
       collection do
         post :update_positions
       end
-      member do
-        get :get_children
-      end
       resources :taxons
     end
 
@@ -208,6 +205,8 @@ Spree::Core::Engine.add_routes do
         end
       end
     end
+
+    resources :style_guide
   end
 
   get '/admin', to: 'admin/root#index', as: :admin

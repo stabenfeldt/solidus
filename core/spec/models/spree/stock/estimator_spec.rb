@@ -117,7 +117,7 @@ module Spree
             expect(subject.shipping_rates(package).map(&:shipping_method_id)).to eq([generic_method.id])
           end
 
-          # regression for #3287
+          # regression for https://github.com/spree/spree/issues/3287
           it "doesn't select backend rates even if they're more affordable" do
             expect(subject.shipping_rates(package).map(&:selected)).to eq [true]
           end
@@ -139,6 +139,40 @@ module Spree
             shipping_rates = subject.shipping_rates(package)
             expect(shipping_rates.first.tax_rate).to eq(tax_rate)
           end
+        end
+
+        it 'uses the configured shipping rate selector' do
+          shipping_rate = Spree::ShippingRate.new
+          allow(Spree::ShippingRate).to receive(:new).and_return(shipping_rate)
+
+          selector_class = Class.new do
+            def initialize(_); end;
+
+            def find_default
+              Spree::ShippingRate.new
+            end
+          end
+          Spree::Config.shipping_rate_selector_class = selector_class
+
+          subject.shipping_rates(package)
+
+          expect(shipping_rate.selected).to eq(true)
+
+          Spree::Config.shipping_rate_selector_class = nil
+        end
+
+        it 'uses the configured shipping rate sorter' do
+          class Spree::Stock::TestSorter; end;
+          Spree::Config.shipping_rate_sorter_class = Spree::Stock::TestSorter
+
+          sorter = double(:sorter, sort: nil)
+          allow(Spree::Stock::TestSorter).to receive(:new).and_return(sorter)
+
+          subject.shipping_rates(package)
+
+          expect(sorter).to have_received(:sort)
+
+          Spree::Config.shipping_rate_sorter_class = nil
         end
       end
     end

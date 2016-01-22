@@ -1,17 +1,6 @@
 module Spree
   module BaseHelper
 
-    # Defined because Rails' current_page? helper is not working when Spree is mounted at root.
-    def current_spree_page?(url)
-      path = request.fullpath.gsub(/^\/\//, '/')
-      if url.is_a?(String)
-        return path == url
-      elsif url.is_a?(Hash)
-        return path == spree.url_for(url)
-      end
-      return false
-    end
-
     def link_to_cart(text = nil)
       text = text ? h(text) : Spree.t(:cart)
       css_class = nil
@@ -42,7 +31,7 @@ module Spree
       end
 
       if meta[:description].blank? && object.kind_of?(Spree::Product)
-        meta[:description] = strip_tags(truncate(object.description, length: 160, separator: ' '))
+        meta[:description] = truncate(strip_tags(object.description), length: 160, separator: ' ')
       end
 
       meta.reverse_merge!({
@@ -134,14 +123,6 @@ module Spree
 
     def seo_url(taxon)
       return spree.nested_taxons_path(taxon.permalink)
-    end
-
-    def gem_available?(name)
-       Gem::Specification.find_by_name(name)
-    rescue Gem::LoadError
-       false
-    rescue
-       Gem.available?(name)
     end
 
     def display_price(product_or_variant)

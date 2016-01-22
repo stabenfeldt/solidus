@@ -20,10 +20,10 @@ end
 
 desc "Generates a dummy app for testing for every Spree engine"
 task :test_app do
-  %w(api backend core frontend sample).each do |engine|
-    ENV['LIB_NAME'] = File.join('spree', engine)
-    ENV['DUMMY_PATH'] = File.expand_path("../#{engine}/spec/dummy", __FILE__)
-    Rake::Task['common:test_app'].execute
+  %w(api backend core frontend sample).each do |gem_name|
+    Dir.chdir("#{File.dirname(__FILE__)}/#{gem_name}") do
+      sh 'rake test_app'
+    end
   end
 end
 
@@ -42,7 +42,8 @@ end
 
 namespace :gem do
   def version
-    File.read(File.expand_path("../SOLIDUS_VERSION", __FILE__)).strip
+    require 'spree/core/version'
+    Spree.solidus_version
   end
 
   def for_each_gem

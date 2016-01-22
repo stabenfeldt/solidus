@@ -16,7 +16,7 @@ describe "Customer Details", type: :feature, js: true do
   let!(:user) { create(:user, email: 'foobar@example.com', ship_address: ship_address, bill_address: bill_address) }
 
   context "brand new order" do
-    # Regression test for #3335 & #5317
+    # Regression test for https://github.com/spree/spree/issues/3335 and https://github.com/spree/spree/issues/5317
     it "associates a user when not using guest checkout" do
       visit spree.admin_path
       click_link "Orders"
@@ -71,7 +71,7 @@ describe "Customer Details", type: :feature, js: true do
         click_button "Update"
         expect(page).to have_content "Customer Details Updated"
         click_link "Customer Details"
-        expect(find_field("order_bill_address_attributes_state_name").value).to eq("Piaui")
+        expect(page).to have_field("order_bill_address_attributes_state_name", with: "Piaui")
       end
     end
 
@@ -86,7 +86,7 @@ describe "Customer Details", type: :feature, js: true do
       click_button "Update"
       click_link "Customer Details"
 
-      # Regression test for #2950 + #2433
+      # Regression test for https://github.com/spree/spree/issues/2950 and https://github.com/spree/spree/issues/2433
       # This act should transition the state of the order as far as it will go too
       within("#order_tab_summary") do
         expect(find("dt#order_status + dd")).to have_content("COMPLETE")
@@ -122,11 +122,11 @@ describe "Customer Details", type: :feature, js: true do
 
       it "sets default country when displaying form" do
         click_link "Customer Details"
-        expect(find_field("order_bill_address_attributes_country_id").value.to_i).to eq brazil.id
+        expect(page).to have_field("order_bill_address_attributes_country_id", with: brazil.id)
       end
     end
 
-    # Regression test for #942
+    # Regression test for https://github.com/spree/spree/issues/942
     context "errors when no shipping methods are available" do
       before do
         Spree::ShippingMethod.delete_all

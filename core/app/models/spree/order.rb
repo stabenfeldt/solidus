@@ -9,7 +9,6 @@ module Spree
     ORDER_NUMBER_PREFIX  = 'R'
 
     include Spree::Order::Checkout
-    include Spree::Order::CurrencyUpdater
     include Spree::Order::Payments
 
     class InsufficientStock < StandardError; end
@@ -93,7 +92,6 @@ module Spree
 
     before_create :create_token
     before_create :link_by_email
-    before_update :homogenize_line_item_currencies, if: :currency_changed?
 
     validates :email, presence: true, if: :require_email
     validates :email, email: true, if: :require_email, allow_blank: true
@@ -101,7 +99,11 @@ module Spree
 
     make_permalink field: :number
 
-    delegate :update_totals, :persist_totals, :to => :updater
+    delegate :update_totals, :persist_totals, to: :updater
+    delegate :firstname, :lastname, to: :bill_address, prefix: true, allow_nil: true
+    alias_method :billing_firstname, :bill_address_firstname
+    alias_method :billing_lastname, :bill_address_lastname
+
 
     class_attribute :update_hooks
     self.update_hooks = Set.new
@@ -411,14 +413,6 @@ module Spree
         PaymentMethod.available(:front_end, store: store) +
         PaymentMethod.available(:both, store: store)
       ).uniq
-    end
-
-    def billing_firstname
-      bill_address.try(:firstname)
-    end
-
-    def billing_lastname
-      bill_address.try(:lastname)
     end
 
     def insufficient_stock_lines
@@ -754,7 +748,7 @@ module Spree
     end
 
     def use_billing?
-      @use_billing == true || @use_billing == 'true' || @use_billing == '1'
+      use_billing.in?([true, 'true', '1'])
     end
 
     def set_currency
